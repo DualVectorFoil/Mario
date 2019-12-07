@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package protobuf;
+
+message VerifyCodeInfo {
+    required string phoneNum = 1;
+    required string verifyCode = 2;
+}
+
+message VerifyCodeRespStatus {
+    required bool status = 1;
+}
+
+service VerifyCodeService {
+    rpc SetVerifyCodeInfo(VerifyCodeInfo) returns (VerifyCodeRespStatus);
+    rpc IsVerifyCodeAvailable(VerifyCodeInfo) returns (VerifyCodeRespStatus);
+}
