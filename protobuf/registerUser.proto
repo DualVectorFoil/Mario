@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package protobuf;
+
+message RegisterInfo {
+    required string phoneNum = 1;
+    required string userName = 2;
+    required string pwd = 3;
+    required string verifyCode = 4;
+}
+
+message RegisterRespStatus {
+    required bool status = 1;
+    required string err = 2;
+}
+
+service RegisterUserService {
+    rpc RegisterUser(RegisterInfo) returns (RegisterRespStatus);
+}
