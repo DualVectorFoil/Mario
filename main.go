@@ -30,6 +30,7 @@ func initGRPCService() {
 	grpcServer := grpc.NewServer()
 	defer grpcServer.GracefulStop()
 
+	pb.RegisterLoginUserServiceServer(grpcServer, serviceServer.NewLoginUserServer(db.GetDB()))
 	pb.RegisterRegisterUserServiceServer(grpcServer, serviceServer.NewRegisterUserServer(db.GetDB()))
 	pb.RegisterVerifyCodeServiceServer(grpcServer, serviceServer.NewVerifyCodeServer(db.GetDB()))
 	err := manager.GetServiceManger(conf.ETCD_ADDRESS).Register(conf.SERVICE_NAME, conf.LISTEN_IP, conf.SERVICE_IP, conf.SERVICE_PORT, grpcServer, conf.GRPC_TTL)

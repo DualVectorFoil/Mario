@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package protobuf;
+
+message ProfileInfo {
+    required string phoneNum = 1;
+    required string avatarUrl = 2;
+    required string userName = 3;
+    required string locale = 4;
+    required string bio = 5;
+    required int32 followers = 6;
+    required int32 following = 7;
+    required int32 artworkCount = 8;
+    required string pwd = 9;
+    required int64 registeredAt = 10;
+    required int64 lastLoginAt = 11;
+    required string token = 12;
+}

@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+package protobuf;
+import 'profile.proto';
+
+message LoginInfo {
+    required string userNameInfo = 1;
+    required string pwd = 2;
+    required string token = 3;
+}
+
+message LoginResp {
+    required bool status = 1;
+    required ProfileInfo profileInfo = 2;
+}
+
+service LoginUserService {
+    rpc LoginUserWithPWD(LoginInfo) returns (LoginResp);
+    rpc LoginUserWithToken(LoginInfo) returns (LoginResp);
+}

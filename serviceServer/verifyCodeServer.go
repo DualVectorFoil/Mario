@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/DualVectorFoil/Zelda/db"
 	pb "github.com/DualVectorFoil/Zelda/protobuf"
-	ptr "github.com/DualVectorFoil/Zelda/utils"
+	ptr2 "github.com/DualVectorFoil/Zelda/utils/ptr"
 	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
@@ -50,12 +50,12 @@ func (s *VerifyCodeServer) SetVerifyCodeInfo(ctx context.Context, verifyCodeInfo
 			"verifyCode": verifyCode,
 		}).Error("SetVerifyCodeInfo failed, err: " + err.Error())
 		return &pb.VerifyCodeRespStatus{
-			Status: ptr.BoolPtr(false),
+			Status: ptr2.BoolPtr(false),
 		}, err
 	}
 	fmt.Println("verifyCode setted: " + verifyCode)
 	return &pb.VerifyCodeRespStatus{
-		Status: ptr.BoolPtr(true),
+		Status: ptr2.BoolPtr(true),
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func (s *VerifyCodeServer) IsVerifyCodeAvailable(ctx context.Context, verifyCode
 
 	if s.DBInstance.IsVerifyCodeAvailable(phoneNum, verifyCode) {
 		return &pb.VerifyCodeRespStatus{
-			Status: ptr.BoolPtr(true),
+			Status: ptr2.BoolPtr(true),
 		}, nil
 	} else {
 		return nil, errors.New("SetVerifyCodeInfo failed.")

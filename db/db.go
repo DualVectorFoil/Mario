@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/DualVectorFoil/Zelda/conf"
 	"github.com/DualVectorFoil/Zelda/model"
@@ -86,8 +87,8 @@ func (instance *DB) IsVerifyCodeAvailable(phoneNum string, verifyCode string) bo
 	return true
 }
 
-func (instance *DB) SaveRegisterUserInfo(phoneNum string, userName string, pwdEncoded string, verifyCode string) error {
-	if phoneNum == "" || userName == "" || pwdEncoded == "" || verifyCode == "" {
+func (instance *DB) SaveRegisterUserInfo(phoneNum string, userName string, pwd string, verifyCode string) error {
+	if phoneNum == "" || userName == "" || pwd == "" || verifyCode == "" {
 		return errors.New("Register failed, uncorrected register info.")
 	}
 
@@ -97,37 +98,70 @@ func (instance *DB) SaveRegisterUserInfo(phoneNum string, userName string, pwdEn
 
 	instance.Lock.Lock()
 	defer instance.Lock.Unlock()
-	rows, err := instance.Mysql.Table(conf.PROFILE_TABLE_NAME).Select([]string{"phone_num", "user_name"}).Rows()
-	if err != nil {
-		return errors.New("Register failed, server error, err: " + err.Error())
+
+	var profileInfo model.ProfileInfo
+	instance.Mysql.Table(conf.PROFILE_TABLE_NAME).Where("phone_num = ? or user_name = ?", phoneNum, userName).Find(&profileInfo)
+	if profileInfo.PhoneNum != "" || profileInfo.UserName != "" {
+		return errors.New("phoneNum or userName has registered.")
 	}
 
-	for rows.Next() {
-		var phoneNumTmp string
-		var userNameTmp string
-		if err := rows.Scan(&phoneNumTmp, &userNameTmp); err != nil {
-			return errors.New("Register failed, server error, err: " + err.Error())
-		}
-
-		if phoneNumTmp == phoneNum {
-			return errors.New("phoneNum has registered.")
-		} else if userNameTmp == userName {
-			return errors.New("userName has registered.")
-		}
-	}
-
-	profileInfo := &model.ProfileInfo{
+	profileInfo = model.ProfileInfo{
 		PhoneNum:     phoneNum,
 		UserName:     userName,
-		PWDEncoded:   pwdEncoded,
+		PWD:          pwd,
 		RegisteredAt: time.Now().Unix(),
 		LastLoginAt:  time.Now().Unix(),
 	}
 
-	errs := instance.Mysql.Create(profileInfo).GetErrors()
+	errs := instance.Mysql.Create(&profileInfo).GetErrors()
 	if len(errs) > 0 {
 		return errors.New("Register failed.")
 	}
 
 	return nil
+}
+
+func (instance *DB) LoginWithPWD(userNameInfo string, pwd string) (*model.ProfileInfo, error) {
+	if userNameInfo == "" || pwd == "" {
+		return nil, errors.New("Uncorrected login info, login failed.")
+	}
+
+	instance.Lock.Lock()
+	defer instance.Lock.Unlock()
+
+	var profileInfo model.ProfileInfo
+	err := instance.Mysql.Where("(phone_num = ? OR user_name = ?) AND pwd = ?", userNameInfo, userNameInfo, pwd).Find(&profileInfo).Error
+	if err != nil {
+		return nil, err
+	}
+	if profileInfo.PhoneNum == "" || profileInfo.UserName == "" {
+		return nil, errors.New("Uncorrected login info, login failed.")
+	}
+
+	return &profileInfo, err
+}
+
+func (instance *DB) LoginWithToken(token string) (*model.ProfileInfo, error) {
+	if token == "" {
+		return nil, errors.New("Uncorrected login token info, login failed.")
+	}
+
+	instance.Lock.Lock()
+	defer instance.Lock.Unlock()
+
+	profileInfoEncoded, err := instance.GetCacheKV(token)
+	if err != nil {
+		return nil, err
+	}
+
+	profileInfo := &model.ProfileInfo{}
+	err = json.Unmarshal([]byte(profileInfoEncoded), profileInfoEncoded)
+	if err != nil {
+		return nil, err
+	}
+	if profileInfo.PhoneNum == "" || profileInfo.UserName == "" {
+		return nil, errors.New("Uncorrected login info, login failed.")
+	}
+
+	return profileInfo, nil
 }
